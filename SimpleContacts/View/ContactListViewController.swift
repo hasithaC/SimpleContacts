@@ -36,33 +36,25 @@ class ContactListViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: true)
         
-        bindViewModel()
-        viewModel.fetchContacts()
+        viewModel.fetchContacts { result in
+            switch result {
+            case .success:
+                DispatchQueue.main.async {
+                    self.contactsTable.reloadData()
+                }
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
     }
     
     @objc func addButtonTapped(){
         let formVC = ContactFormViewController()
+        formVC.delegate = self
         formVC.modalPresentationStyle = .overFullScreen
         formVC.modalTransitionStyle = .crossDissolve
         
         self.present(formVC, animated: true)
-    }
-    
-    private func bindViewModel() {
-        viewModel.onContactsUpdated = { [weak self] in
-            DispatchQueue.main.async {
-                self?.contactsTable.reloadData()
-            }
-        }
-        viewModel.onError = { error in
-            print("Failed to load contacts:", error.localizedDescription)
-        }
-        
-        viewModel.onContactDeleted = { [weak self] indexPath in
-            DispatchQueue.main.async {
-                self?.contactsTable.deleteRows(at: [indexPath], with: .fade)
-            }
-        }
     }
 }
 
@@ -80,9 +72,45 @@ extension ContactListViewController: UITableViewDataSource, UITableViewDelegate 
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         switch editingStyle {
             case .delete:
-            viewModel.deleteContact(indexPath: indexPath)
+            viewModel.deleteContact(at: indexPath) { result in
+                switch result {
+                case .success:
+                    DispatchQueue.main.async {
+                        self.contactsTable.deleteRows(at: [indexPath], with: .fade)
+                    }
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }
         default:
             break;
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        let formVC = ContactFormViewController()
+        formVC.delegate = self
+        formVC.modalPresentationStyle = .overFullScreen
+        formVC.modalTransitionStyle = .crossDissolve
+        formVC.contact = viewModel.contact(at: indexPath.row)
+        
+        self.present(formVC, animated: true)
+    }
+}
+
+extension ContactListViewController: ContactFormViewControllerDelegate {
+    func didUpdateContacts() {
+        viewModel.fetchContacts { result in
+            switch result {
+            case .success:
+                DispatchQueue.main.async {
+                    self.contactsTable.reloadData()
+                }
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
         }
     }
 }

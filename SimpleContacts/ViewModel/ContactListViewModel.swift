@@ -10,33 +10,28 @@ import Foundation
 class ContactListViewModel {
     
     private(set) var contacts: [ContactItem] = []
-    
-    var onContactsUpdated: (() -> Void)?
-    var onContactDeleted: ((IndexPath) -> Void)?
-    var onError: ((Error) -> Void)?
-    
-    func fetchContacts() {
+        
+    func fetchContacts(completion: @escaping(Result<Void, Error>)->Void) {
         DataPersistenceManager.shared.fetchContactItems { [weak self] result in
             switch result {
             case .success(let contactItems):
                 self?.contacts = contactItems
-                self?.onContactsUpdated?()
+                completion(.success(()))
             case .failure(let error):
-                self?.onError?(error)
+                completion(.failure(error))
             }
         }
     }
     
-    func deleteContact(indexPath: IndexPath){
+    func deleteContact(at indexPath: IndexPath, completion: @escaping(Result<IndexPath, Error>)->Void){
         let contact = contacts[indexPath.row]
         DataPersistenceManager.shared.deleteContact(contact: contact) { [weak self] result in
             switch result {
             case .success:
                 self?.contacts.remove(at: indexPath.row)
-                self?.onContactDeleted?(indexPath)
-                print("Successfully Deleted")
+                completion(.success(indexPath))
             case .failure(let error):
-                print(error.localizedDescription)
+                completion(.failure(error))
             }
         }
     }
@@ -47,5 +42,9 @@ class ContactListViewModel {
     
     func contactName(at index: Int) -> String {
         return contacts[index].contact_name ?? ""
+    }
+    
+    func contact(at index: Int) -> ContactItem {
+        return contacts[index]
     }
 }

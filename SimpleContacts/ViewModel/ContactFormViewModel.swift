@@ -27,4 +27,9 @@ class ContactFormViewModel {
         let contact = Contact(name: name, phoneNumber: number)
         DataPersistenceManager.shared.saveContact(model: contact, completion: completion)
     }
+    
+    func updateContact(item: ContactItem, completion: @escaping (Result<Void, Error>) -> Void) {
+        let contact = Contact(name: name, phoneNumber: number)
+        DataPersistenceManager.shared.updateContact(item: item, model: contact, completion: completion)
+    }
 }

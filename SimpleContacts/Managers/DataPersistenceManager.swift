@@ -71,4 +71,22 @@ class DataPersistenceManager {
             completion(.failure(DataPersistenceError.failedToDelete))
         }
     }
+    
+    func updateContact(item: ContactItem, model: Contact, completion: @escaping(Result<Void, Error>)->Void){
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        
+        item.contact_name = model.name
+        item.contact_number = model.phoneNumber
+        
+        do{
+            try context.save()
+            completion(.success(()))
+        }catch{
+            completion(.failure(DataPersistenceError.failedToUpdate))
+        }
+    }
 }

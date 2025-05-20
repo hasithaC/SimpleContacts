@@ -30,8 +30,6 @@ class AppTextField: UITextField {
 
 extension AppTextField {
     func style(){
-        translatesAutoresizingMaskIntoConstraints = false
-        
         layer.cornerRadius = 8
         layer.borderWidth = 1
         layer.borderColor = UIColor.secondaryLabel.cgColor
@@ -46,6 +44,6 @@ extension AppTextField {
         clearButtonMode = .whileEditing
         
         heightAnchor.constraint(equalToConstant: 32).isActive = true
-
+        translatesAutoresizingMaskIntoConstraints = false
     }
 }

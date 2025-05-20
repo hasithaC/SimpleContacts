@@ -25,6 +25,7 @@ extension AppPrimaryButton {
         setTitleColor(.white, for: .normal)
         titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
         backgroundColor = .systemOrange
+        heightAnchor.constraint(equalToConstant: 40).isActive = true
         translatesAutoresizingMaskIntoConstraints = false
     }
 }
