@@ -8,6 +8,7 @@
 import Foundation
 
 struct Contact {
+    let id = UUID()
     let name: String
     let phoneNumber: String
 }
