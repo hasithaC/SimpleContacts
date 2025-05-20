@@ -57,6 +57,12 @@ class ContactListViewController: UIViewController {
         viewModel.onError = { error in
             print("Failed to load contacts:", error.localizedDescription)
         }
+        
+        viewModel.onContactDeleted = { [weak self] indexPath in
+            DispatchQueue.main.async {
+                self?.contactsTable.deleteRows(at: [indexPath], with: .fade)
+            }
+        }
     }
 }
 
@@ -69,5 +75,14 @@ extension ContactListViewController: UITableViewDataSource, UITableViewDelegate 
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = viewModel.contactName(at: indexPath.row)
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        switch editingStyle {
+            case .delete:
+            viewModel.deleteContact(indexPath: indexPath)
+        default:
+            break;
+        }
     }
 }
