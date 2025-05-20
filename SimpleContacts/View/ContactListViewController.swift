@@ -16,17 +16,15 @@ class ContactListViewController: UIViewController {
     }()
     
     private var viewModel = ContactListViewModel()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Simple Contacts"
-        
+        view.backgroundColor = .systemBackground
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonTapped))
-        navigationItem.rightBarButtonItem = addButton
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonTapped))
         
-        view.backgroundColor = .systemBackground
         view.addSubview(contactsTable)
         contactsTable.frame = view.bounds
         
@@ -37,45 +35,39 @@ class ContactListViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: true)
+        
+        bindViewModel()
+        viewModel.fetchContacts()
     }
-}
-
-extension ContactListViewController {
+    
     @objc func addButtonTapped(){
-        DispatchQueue.main.async {
-            let formVC = ContactFormViewController()
-            formVC.modalPresentationStyle = .overFullScreen
-            formVC.modalTransitionStyle = .crossDissolve
-            
-            self.present(formVC, animated: true)
+        let formVC = ContactFormViewController()
+        formVC.modalPresentationStyle = .overFullScreen
+        formVC.modalTransitionStyle = .crossDissolve
+        
+        self.present(formVC, animated: true)
+    }
+    
+    private func bindViewModel() {
+        viewModel.onContactsUpdated = { [weak self] in
+            DispatchQueue.main.async {
+                self?.contactsTable.reloadData()
+            }
+        }
+        viewModel.onError = { error in
+            print("Failed to load contacts:", error.localizedDescription)
         }
     }
 }
 
 extension ContactListViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.contacts.count
+        return viewModel.numberOfContacts()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell") as! UITableViewCell
-        cell.textLabel?.text = viewModel.contacts[indexPath.row].name
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        cell.textLabel?.text = viewModel.contactName(at: indexPath.row)
         return cell
     }
-}
-
-class PopupViewController: UIViewController {
-  var dismissHandler: (() -> Void)?
-
-  override func viewDidLoad() {
-    super.viewDidLoad()
-
-    // Customize the appearance of the view here
-    view.backgroundColor = .white
-  }
-
-  @IBAction func dismissButtonTapped(_ sender: Any) {
-    dismissHandler?()
-    dismiss(animated: true, completion: nil)
-  }
 }

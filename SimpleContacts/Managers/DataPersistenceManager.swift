@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import CoreData
 
 class DataPersistenceManager {
     static let shared = DataPersistenceManager()
@@ -35,6 +36,23 @@ class DataPersistenceManager {
             completion(.success(()))
         }catch{
             completion(.failure(DataPersistenceError.failedToSave))
+        }
+    }
+    
+    func fetchContactItems(completion: @escaping(Result<[ContactItem], Error>)->Void){
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        let request: NSFetchRequest<ContactItem>
+        request = ContactItem.fetchRequest()
+        
+        do{
+            let contactItems = try context.fetch(request)
+            completion(.success(contactItems))
+        }catch{
+            completion(.failure(DataPersistenceError.failedToFetch))
         }
     }
 }

@@ -115,8 +115,8 @@ extension ContactFormViewController: UITextFieldDelegate {
         ])
         
         NSLayoutConstraint.activate([
-            closeButton.widthAnchor.constraint(equalToConstant: 20),
-            closeButton.heightAnchor.constraint(equalToConstant: 20)
+            closeButton.widthAnchor.constraint(equalToConstant: 16),
+            closeButton.heightAnchor.constraint(equalToConstant: 16)
         ])
     }
     
