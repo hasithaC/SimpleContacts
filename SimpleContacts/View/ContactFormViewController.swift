@@ -17,16 +17,19 @@ class ContactFormViewController: UIViewController {
     private let viewModel = ContactFormViewModel()
     
     let containerView = AppModalContainerView()
-    let topStackView = UIStackView()
-    let bottomStackView = UIStackView()
+    let primaryStackView = UIStackView()
     let titleLabel = UILabel()
-    let closeButton = UIButton(type: .system)
+    
+    let contactPlaceholderImageView = UIImageView()
     let contactNameTextField = AppTextField()
     let contactNumberTextField = AppTextField()
+    let errorMessageLabel = UILabel()
     let primaryButton = AppPrimaryButton()
+    let closeButton = AppSecondaryButton()
     
-    let innerPadding: CGFloat = 24
-    let outerPadding: CGFloat = 32
+    private let innerPadding: CGFloat = 24
+    private let outerPadding: CGFloat = 32
+    private let imageSize: CGFloat = 96
     
     weak var delegate: ContactFormViewControllerDelegate?
     
@@ -44,17 +47,18 @@ class ContactFormViewController: UIViewController {
     
     @objc private func saveContact() {
         view.endEditing(true)
+        errorMessageLabel.isHidden = true
         
         viewModel.name = contactNameTextField.text ?? ""
         viewModel.number = contactNumberTextField.text ?? ""
         
         guard viewModel.isNameValid else {
-            print("Invalid name")
+            configureErrorMessage(message: "Please enter a contact name.")
             return
         }
         
         guard viewModel.isNumberValid else {
-            print("Invalid number")
+            configureErrorMessage(message: "Please enter a valid phone number.")
             return
         }
         
@@ -110,70 +114,87 @@ extension ContactFormViewController {
     func configureUI() {
         
         view.backgroundColor = UIColor.black.withAlphaComponent(0.75)
+    
+        primaryStackView.axis = .vertical
+        primaryStackView.spacing = 12
+        primaryStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        topStackView.axis = .horizontal
-        topStackView.spacing = 8
-        topStackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        bottomStackView.axis = .vertical
-        bottomStackView.spacing = 12
-        bottomStackView.translatesAutoresizingMaskIntoConstraints = false
+        contactPlaceholderImageView.image = UIImage(systemName: "person.crop.circle.fill")
+        contactPlaceholderImageView.tintColor = .systemOrange
+        contactPlaceholderImageView.translatesAutoresizingMaskIntoConstraints = false
+        contactPlaceholderImageView.contentMode = .scaleAspectFit
+        contactPlaceholderImageView.layer.cornerRadius = 24
+        contactPlaceholderImageView.clipsToBounds = true
         
         titleLabel.text = (contact == nil) ? "Create Contact" : "Update Contact"
-        titleLabel.font = UIFont.systemFont(ofSize: 20)
+        titleLabel.font = UIFont.systemFont(ofSize: 24)
         titleLabel.textColor = .label
         titleLabel.textAlignment = .center
         titleLabel.adjustsFontSizeToFitWidth = true
         titleLabel.numberOfLines = 0
-        
-        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
-        closeButton.tintColor = .label
-        closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+                
         contactNameTextField.delegate = self
         contactNameTextField.placeholder = "Contact Name"
+        contactNameTextField.keyboardType = .default
+        contactNameTextField.autocapitalizationType = .words
         
         contactNumberTextField.delegate = self
         contactNumberTextField.placeholder = "Contact Number"
         contactNumberTextField.keyboardType = .phonePad
         
+        errorMessageLabel.font = UIFont.systemFont(ofSize: 12)
+        errorMessageLabel.textAlignment = .center
+        errorMessageLabel.textColor = .systemRed
+        errorMessageLabel.numberOfLines = 0
+        errorMessageLabel.text = "Error Failure"
+        errorMessageLabel.isHidden = true
+        errorMessageLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        
         primaryButton.setTitle("Save", for: .normal)
         primaryButton.addTarget(self, action: #selector(saveContact), for: .touchUpInside)
         
+        closeButton.setTitle("Cancel", for: .normal)
+        closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
     }
     
     func layoutUI() {
         view.addSubview(containerView)
-        containerView.addSubview(topStackView)
-        containerView.addSubview(bottomStackView)
+        containerView.addSubview(titleLabel)
+        containerView.addSubview(primaryStackView)
         containerView.addSubview(primaryButton)
+        containerView.addSubview(closeButton)
         
-        topStackView.addArrangedSubview(titleLabel)
-        topStackView.addArrangedSubview(closeButton)
-        
-        bottomStackView.addArrangedSubview(contactNameTextField)
-        bottomStackView.addArrangedSubview(contactNumberTextField)
+        primaryStackView.addArrangedSubview(contactPlaceholderImageView)
+        primaryStackView.addArrangedSubview(contactNameTextField)
+        primaryStackView.addArrangedSubview(contactNumberTextField)
+        primaryStackView.addArrangedSubview(errorMessageLabel)
         
         NSLayoutConstraint.activate([
             containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: outerPadding),
             containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -outerPadding),
             
-            topStackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: innerPadding),
-            topStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: innerPadding),
-            topStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -innerPadding),
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: innerPadding),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: innerPadding),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -innerPadding),
             
-            bottomStackView.topAnchor.constraint(equalTo: topStackView.bottomAnchor, constant: outerPadding),
-            bottomStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: innerPadding),
-            bottomStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -innerPadding),
+            primaryStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: outerPadding),
+            primaryStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: innerPadding),
+            primaryStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -innerPadding),
             
-            primaryButton.topAnchor.constraint(equalTo: bottomStackView.bottomAnchor, constant: innerPadding),
+            primaryButton.topAnchor.constraint(equalTo: primaryStackView.bottomAnchor, constant: innerPadding),
             primaryButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: innerPadding),
             primaryButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -innerPadding),
-            primaryButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -innerPadding),
             
-            closeButton.widthAnchor.constraint(equalToConstant: 20),
-            closeButton.heightAnchor.constraint(equalToConstant: 20)
+            closeButton.topAnchor.constraint(equalTo: primaryButton.bottomAnchor, constant: innerPadding),
+            closeButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: innerPadding),
+            closeButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -innerPadding),
+            closeButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -innerPadding),
+            
+            contactPlaceholderImageView.widthAnchor.constraint(equalToConstant: imageSize),
+            contactPlaceholderImageView.heightAnchor.constraint(equalToConstant: imageSize),
         ])
     }
     
@@ -185,4 +206,10 @@ extension ContactFormViewController {
             viewModel.number = contact.contact_number ?? ""
         }
     }
+    
+    private func configureErrorMessage(message: String){
+        errorMessageLabel.isHidden = false
+        errorMessageLabel.text = message
+    }
+
 }

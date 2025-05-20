@@ -12,11 +12,16 @@ class ContactFormViewModel {
     var number: String = ""
        
     var isNameValid: Bool {
-        return !name.trimmingCharacters(in: .whitespaces).isEmpty && name.count >= 3
+        return !name.trimmingCharacters(in: .whitespaces).isEmpty
     }
     
     var isNumberValid: Bool {
-        return !number.trimmingCharacters(in: .whitespaces).isEmpty
+        let cleanedNumber = number.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Regular expression for basic phone number formats (e.g., 1234567890, (123) 456-7890, +11234567890)
+        let phoneRegex = "^[0-9+()\\s-]{7,15}$"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", phoneRegex)
+        return predicate.evaluate(with: cleanedNumber)
     }
     
     var isFormValid: Bool {

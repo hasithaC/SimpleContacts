@@ -11,7 +11,7 @@ class ContactListViewController: UIViewController {
     
     private let contactsTable: UITableView = {
         let table = UITableView(frame: .zero, style: .grouped)
-        table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        table.register(ContactTableViewCell.self, forCellReuseIdentifier: ContactTableViewCell.identifier)
         return table
     }()
     
@@ -31,6 +31,7 @@ class ContactListViewController: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         
         navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonTapped))
         
         view.addSubview(contactsTable)
@@ -75,8 +76,12 @@ extension ContactListViewController: UITableViewDataSource, UITableViewDelegate 
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = viewModel.contactName(at: indexPath.row)
+        
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ContactTableViewCell.identifier, for: indexPath) as? ContactTableViewCell else {
+            return ContactTableViewCell()
+        }
+        cell.configure(contact: viewModel.contact(at: indexPath.row))
+        
         return cell
     }
     
