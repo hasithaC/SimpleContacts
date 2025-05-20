@@ -15,6 +15,13 @@ class ContactListViewController: UIViewController {
         return table
     }()
     
+    private let searchController: UISearchController = {
+        let controller = UISearchController()
+        controller.obscuresBackgroundDuringPresentation = false
+        controller.searchBar.placeholder = "Search for a name"
+        return controller
+    }()
+
     private var viewModel = ContactListViewModel()
     
     override func viewDidLoad() {
@@ -23,6 +30,7 @@ class ContactListViewController: UIViewController {
         view.backgroundColor = .systemBackground
         navigationController?.navigationBar.prefersLargeTitles = true
         
+        navigationItem.searchController = searchController
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonTapped))
         
         view.addSubview(contactsTable)
@@ -30,6 +38,9 @@ class ContactListViewController: UIViewController {
         
         contactsTable.dataSource = self
         contactsTable.delegate = self
+        
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.delegate = self
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -113,4 +124,28 @@ extension ContactListViewController: ContactFormViewControllerDelegate {
             }
         }
     }
+}
+
+extension ContactListViewController: UISearchResultsUpdating, UISearchBarDelegate {
+    func updateSearchResults(for searchController: UISearchController) {
+        viewModel.filterContacts(text: searchController.searchBar.text) { [weak self] isSearching in
+            if isSearching {
+                DispatchQueue.main.async {
+                    self?.contactsTable.reloadData()
+                }
+            }else {
+                self?.viewModel.fetchContacts { result in
+                    switch result {
+                    case .success:
+                        DispatchQueue.main.async {
+                            self?.contactsTable.reloadData()
+                        }
+                    case .failure(let error):
+                        print(error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
+    
 }

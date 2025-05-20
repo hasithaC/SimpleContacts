@@ -32,7 +32,7 @@ extension AppTextField {
     func style(){
         layer.cornerRadius = 8
         layer.borderWidth = 1
-        layer.borderColor = UIColor.secondaryLabel.cgColor
+        layer.borderColor = UIColor.systemGray4.cgColor
         
         font = UIFont.systemFont(ofSize: 16)
         adjustsFontSizeToFitWidth = true

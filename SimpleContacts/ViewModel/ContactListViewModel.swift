@@ -10,6 +10,8 @@ import Foundation
 class ContactListViewModel {
     
     private(set) var contacts: [ContactItem] = []
+    private(set) var filteredContacts: [ContactItem] = []
+    private(set) var isSearching = false
         
     func fetchContacts(completion: @escaping(Result<Void, Error>)->Void) {
         DataPersistenceManager.shared.fetchContactItems { [weak self] result in
@@ -24,11 +26,21 @@ class ContactListViewModel {
     }
     
     func deleteContact(at indexPath: IndexPath, completion: @escaping(Result<IndexPath, Error>)->Void){
-        let contact = contacts[indexPath.row]
+        let contact = currentContacts()[indexPath.row]
         DataPersistenceManager.shared.deleteContact(contact: contact) { [weak self] result in
             switch result {
             case .success:
-                self?.contacts.remove(at: indexPath.row)
+                guard let isSearching = self?.isSearching else {
+                    return
+                }
+                
+                if  (isSearching)  {
+                    self?.filteredContacts.remove(at: indexPath.row)
+                }
+                
+                if let index = self?.contacts.firstIndex(where: { $0.id == contact.id }) {
+                    self?.contacts.remove(at: index)
+                }
                 completion(.success(indexPath))
             case .failure(let error):
                 completion(.failure(error))
@@ -37,14 +49,34 @@ class ContactListViewModel {
     }
     
     func numberOfContacts() -> Int {
-        return contacts.count
+        return currentContacts().count
     }
     
     func contactName(at index: Int) -> String {
-        return contacts[index].contact_name ?? ""
+        return currentContacts()[index].contact_name ?? ""
     }
     
     func contact(at index: Int) -> ContactItem {
-        return contacts[index]
+        return currentContacts()[index]
     }
+    
+    private func currentContacts() -> [ContactItem] {
+        return isSearching ? filteredContacts : contacts
+    }
+    
+    func filterContacts(text: String?, completion: @escaping (Bool) -> Void) {
+        guard let filter = text, !filter.isEmpty else {
+            filteredContacts.removeAll()
+            isSearching = false
+            completion(false)
+            return
+        }
+
+        isSearching = true
+        filteredContacts = contacts.filter { contact in
+            contact.contact_name?.lowercased().contains(filter.lowercased()) ?? false
+        }
+        completion(true)
+    }
+
 }
